@@ -583,12 +583,12 @@ server <- function(input, output){
       
       trim_dat <- user_data() %>%
         filter(!!rlang::sym(gene_column) %in% common_genes) %>%
-        arrange_(.dots=gene_column) %>%
+        arrange(!!rlang::sym(gene_column)) %>%
         select_(.dots = paste0("-", gene_column))
       
       trim_ref <- ref_data() %>%
         filter(!!rlang::sym(ref_gene_column) %in% common_genes) %>%
-        arrange_(.dots=ref_gene_column) %>%
+        arrange(!!rlang::sym(ref_gene_column)) %>%
         select_(.dots = paste0("-", ref_gene_column))
       
       
