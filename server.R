@@ -156,7 +156,11 @@ server <- function(input, output){
         
         req(input$run)
         
+        gene_column <<- grep("gene", colnames(dat), ignore.case = T, value = T)
+        
         dat
+        
+       
         
         
         
