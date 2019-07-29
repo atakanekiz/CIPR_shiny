@@ -3,6 +3,11 @@
 
 server <- function(input, output){
   
+  library(tibble)
+  library(dplyr)
+  library(ggpubr)
+  library(gtools)
+  
   # Max allowed size of the for the uploaded csv files
   options(shiny.maxRequestSize=75*1024^2) 
   
