@@ -1,5 +1,5 @@
 # v5 ====> copied from v4 and v3
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 
 server <- function(input, output){
   
@@ -129,7 +129,7 @@ server <- function(input, output){
         validate(
           need(
             {if(sum(Reduce("|", lapply(c("logfc", "gene", "cluster"), grepl, colnames(dat), ignore.case=T))) == 3) TRUE else FALSE},
-            "Formatting error: Make sure your dataset contains at least three columns named 'logfc', 'gene', and 'cluster' (Capitalization of the column names is not important. Data can have other columns which will be ignored)"
+            "Formatting error: Make sure your dataset contains at least three columns named 'logfc', 'gene', and 'cluster' (Capitalization of the column names is not important. Data can have other columns which will be ignored). Did you mean to use correlation methods instead?"
           )
         )
         
@@ -193,7 +193,7 @@ server <- function(input, output){
         validate(
           need(
             {if(sum(Reduce("|", lapply(c("logfc", "gene"), grepl, colnames(dat), ignore.case=T))) == 1) TRUE else FALSE},
-            "Formatting error: Make sure your dataset contains a column named 'gene' (capitalization is not important, duplicate gene column is not allowed). Other columns should feature the genes."
+            "Formatting error: Make sure your dataset contains a column named 'gene' (capitalization is not important, duplicate gene column is not allowed). Other columns should contain average gene expression per cluster. Did you mean to use logFC comparison methods?"
           )
         )
         
@@ -229,13 +229,13 @@ server <- function(input, output){
         # Calculated from immgen data by taking the ratio of gene expression per cluster to the overall average
         # and log transforming these values. This object is prepared separately to reduce compute time here
 
-        reference_log <- readRDS("data/immgen_recalc_ratio.rds")
+        reference <- readRDS("data/immgen_recalc_ratio.rds")
         
         # Name of the gene column in reference data
-        ref_gene_column <<- grep("gene", colnames(reference_log), ignore.case = T, value = T)
+        ref_gene_column <<- grep("gene", colnames(reference), ignore.case = T, value = T)
         
         
-        reference_log
+        # reference
         
         
       } else {
@@ -266,7 +266,7 @@ server <- function(input, output){
         
         
         # Calculate the ratio of gene expression in a given cell type compared 
-        # to the average of the whole cohort. Calculate log (natural) fold change and store it in immgen_dat2
+        # to the average of the whole cohort. Calculate log (natural) fold change
         
         # Linear data
         # reference_ratio <- log1p(sweep(reference[,!colnames(reference) %in% ref_gene_column], 1, FUN="/", gene_avg))
@@ -276,10 +276,10 @@ server <- function(input, output){
         
         
         # Combine gene names and the log fold change in one data frame
-        reference_log <- cbind("gene"= tolower(reference[,ref_gene_column]), reference_ratio)
+        reference <- cbind("gene"= tolower(reference[,ref_gene_column]), reference_ratio)
         
         # return this data frame to reactive object
-        reference_log
+        # reference
         
       }
       
@@ -304,10 +304,34 @@ server <- function(input, output){
         
       } 
       
-      reference
+      # reference
+     
+    }
+    
+    
+    # Apply quantile filtering
+    
+    if(input$sel_reference == "ImmGen"){
       
+      var_vec <- readRDS("data/var_vec.rds")
+      
+      keep_var <- quantile(var_vec, probs = 1-input$var_filter/100, na.rm = T)
+      
+      keep_genes <- var_vec >= keep_var
+      
+    } else{
+      
+      var_vec <- apply(reference, 1, var, na.rm=T)
+      
+      keep_var <- quantile(var_vec, probs = 1-input$var_filter/100, na.rm = T)
+      
+      keep_genes <- var_vec >= keep_var
       
     }
+    
+    
+    # Return reference data frame
+    reference[keep_genes, ]
     
   })
   
@@ -943,3 +967,17 @@ server <- function(input, output){
   
   
 } # close server function
+
+
+# Testing area (comment out)
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# reference_log <- readRDS("data/immgen_recalc_ratio.rds")
+# reference <- readRDS("data/immgen.rds")
+# 
+# var_vec_log <- apply(reference_log, 1, var, na.rm=T)
+# var_vec <- apply(reference, 1, var, na.rm=T)
+
+
+
+
+

@@ -49,6 +49,13 @@ ui <- fluidPage(
                  # horizontal line
                  tags$hr(), 
                  
+                 sliderInput("var_filter", "Keep top Nth % of variable genes",
+                             min = 0, max = 100,
+                             value = 100),
+                 
+                 # horizontal line
+                 tags$hr(), 
+                 
                  
                  actionButton("run", label="Analyze"),
                  
@@ -106,16 +113,16 @@ ui <- fluidPage(
                    h4("Please wait while the images are being generated. This can take some time depending on the cluster numbers.\n"),
                    p("In the plots below, horizontal lines indicate the mean identity score for each experimental cell cluster, and the shaded bands indicate +/- 1 and 2 standard deviations from the mean.\n\n"),
                    uiOutput("plots")
-
+                   
                  )       
         ),
         
         
-
+        
         tabPanel("How to use this program",
                  
                  h3("Summary"),
-                 p("Understanding the biological identity of cell clusters in single cell RNA sequencing (SCseq) experiments can be challenging due to overlapping gene expression profiles. An accurate assessment of the cluster identity requires analyzing multiple genes simultaneously as opposed to examining a few selected lineage-specific markers. Cluster Identity PRedictor (CIPR) compares user-provided SCseq cluster gene signatures with", a('Immunological Genome Project (ImmGen)', href= 'https://www.immgen.org'), "mouse immune cell datasets -- or with a user-provided reference dataset --, and calculates an", strong('identity score (IS)'), "for each SCseq cluster per reference cell subset. To calculate the IS, CIPR compares differential gene expression signatures of unknown clusters to that of known reference samples using three different methods: 1) Log fold-change comparison (dot product), 2) Spearman's correlation, and 3) Pearsons's correlation. For further information, please read the sections below."),
+                 p("Understanding the biological identity of cell clusters in single cell RNA sequencing (SCseq) experiments can be challenging due to overlapping gene expression profiles. An accurate assessment of the cluster identity requires analyzing multiple genes simultaneously as opposed to examining a few selected lineage-specific markers. Cluster Identity PRedictor (CIPR) compares user-provided SCseq cluster gene signatures with", a('Immunological Genome Project (ImmGen)', href= 'https://www.immgen.org'), "mouse immune cell datasets -- or with a user-provided reference dataset --, and calculates an", strong('identity score (IS)'), "for each SCseq cluster per reference cell subset. To calculate the IS, CIPR compares differential gene expression signatures of unknown clusters to that of known reference samples using three different methods: 1) Log fold-change comparison (dot product), 2) Spearman's correlation, and 3) Pearsons's correlation. For further information and frequently asked questions, please read the sections below."),
                  
                  br(),br(),
                  
@@ -138,7 +145,7 @@ ui <- fluidPage(
                    tags$li("This data frame must have a column named 'gene', and other columns should have the average expression values in individual clusters."),
                    tags$li("If SCseq data is being analyzed with Seurat package,", strong("AverageExpression"), "function can be used to generate a CIPR-ready data frame. Please see below the example code snippet to obtain a suitable input data using this method.")
                    
-                   ),
+                 ),
                  
                  br(),
                  strong("For logFC comparison methods using differentially expressed genes"),
@@ -149,10 +156,10 @@ ui <- fluidPage(
                    tags$li("Alternatively, the differential gene expression data can be exported using Loupe Cell Browser (10X Genomics) and manually edited to obtain the correct format for CIPR")
                    
                  ),
-                   
-                   
-              br(),
-              
+                 
+                 
+                 br(),
+                 
                  p(strong("Sample input data. (A) For correlation methods (B) For logFC comparison methods")),
                  imageOutput("sample_data_file_logfc"),
                  
@@ -167,102 +174,103 @@ ui <- fluidPage(
                    tags$li("The first column of the reference data frame must have gene names (e.g. Pdcd1, Tnfa) and must be named as", strong("Gene.")),
                    tags$li("This file can contain biological and technical replicates. In this case, the identity score is calculated and plotted for each replicate separately.")
                  ),
-                 br(),
-                 p(strong("Sample reference gene expression data")),
-                 imageOutput("sample_reference_file"),
-                 
-                 
-                 h3("About (optional) custom reference annotation data"),
-                 tags$ul(
-                   tags$li("If a custom reference dataset is used, although not necessary, an annotation file (in csv format) can be uploaded to obtain more informative plots."),
-                   tags$li("Annotation file must contain the columns named as", strong("'short_name', 'long_name', 'description', and 'reference_cell_type'")),
-                   tags$li("Data under 'short_name' column must", strong("EXACTLY"), "match the column names of the reference gene expression data."),
-                   tags$li("Annotation file can have other columns as well, which will be ignored.")
-                 ),
- 
-                 p(strong("Sample reference annotation data")),
-                 imageOutput("sample_annotation_file"),
-                 
-                 
-                 h3("How is cell identity score calculated?"),
-                 p("CIPR can either analyze the correlation between unknown clusters and reference cell subsets by using the entire gene set, or can compare the patterns of differential gene expression in unknown clusters and individual reference subsets. When the whole gene set correlation method is used, the used can select either Spearman's or Pearson's correlation. When the logFC comparison method is used, the user can select one of the three calculation approaches: 1) Log fold change (logFC) dot product, 2) Spearman's correlation, 3) Pearson's correlation"),
-              
-                 br(),
-              
-              h4(strong("If correlation method is used:")),
-              
-              tags$ul(
-                tags$li("When using correlation approaches, CIPR algorithm calculates pair-wise correlation coefficients between unknown clusters and each of the reference subsets using either Spearman's or Pearson's methods."),
-                tags$li("The correlation coefficients from pairwise comparisons are reported as identity score per reference cell type for each cluster."),
-                tags$li("For each cell cluster in the experiment, correlation coefficients of reference cell types are plotted in dot plots which shows reference cell types on the x-axis, and correlation coefficients on the y-axis."),
-                tags$li("Reference cell types with the 5 highest identity scores for each unknown cluster is summarized in an interactive dot plot"),
-                tags$li("Although, the effects of the outlier genes will be mitigated by the other genes, cell types with only a few strongly distinguishing genes may be misclassified in this method.")
-              ),
-              
-              br(), br(),
-                 
-                 h4(strong("If logFC comparison method is used:")),
-                 
-                 p("The algorithm works first by calculating gene expression signatures in the reference file, and then comparing the unknown cluster signatures with these reference signatures. Specifically the following processes are performed:"),
-                 h5(strong("Pre-processing of reference dataset")),
-                 tags$ul(
-                   tags$li("The algorithm uses pre-loaded ImmGen signatures or a user-uploaded reference expression file (see below for the details of reference file format)."),
-                   tags$li("The reference expression file should contain normalized gene expression values in log scale in rows and cell types in columns. Reference data can be derived from various high-throughput experiments such as microarray or RNA sequencing"),
-                   tags$li("For each gene found in the reference file, algorithm subtracts the average gene expression value of the whole data set (i.e. all columns) from the gene expression value in each cell type (i.e. individual columns) to calculate logFC"),
-                   tags$li("Therefore, positive logFC values indicate upregulation and negative values indicate downregulation of a given gene. Therefore, pre-processing of the reference file results in a data frame that features logFC values of each gene in each cell type.")
-                 ),
-                 h5(strong("Analysis of experimental cluster signatures against reference file")),
-                 tags$ul(
-                   tags$li("Uploaded cluster signature file should contain information about genes, logFC in expression levels and the cluster information (see below for the correct file format)."),
-                   tags$li("Algorithm finds the common genes between experimental data and the reference dataset."),
-                   tags$li("User can select one of three methods for comparing logFC values: Spearman's correlation, Pearson's correlation, and logFC dot product"),
-                   tags$li("Correlation methods calculate correlation coefficients between logFC values for each unknown cluster-reference cell subset pairs and reports these as identity scores."),
-                   tags$li("If logFC dot product method is selected, for each shared gene, logFC values of differentially expressed genes from unknown clusters are multiplied with the logFC values in the reference subsets. This way if a gene is upregulated or downregulated in both the unknown cluster and the reference cell type (i.e. positive correlation), the multiplication will result in a positive number (i.e. multiplication of two positive or two negative numbers). Alternatively, if a gene is differentially regulated in opposite directions in the unknown cluster and reference cell type (i.e. negative correlation), multiplication of logFC values will result in a negative number."),
-                   tags$li("Multiplied logFC values per each gene are added up, resulting in an aggregate identity score for each cluster in the experimental data. This way, genes that have similar expression patterns in the experimental cell cluster and the reference cell contribute to a higher identity score, whereas genes with opposite expression patterns will result in a lower identity score"),
-                   tags$li(strong("This way, each cluster in the SCseq experiment is analyzed against each known cell type in the reference file and scored for its overall similarity using a dot product approach. A higher identity score indicates the unknown cluster has a similar gene expression profile to a given reference dataset, and suggest shared biological origins.")),
-                   tags$li("For each cell cluster in the experiment, aggregate identity score of reference cell types are plotted in dot plots which shows reference cell types on the x-axis, and aggregate identity score on the y-axis."),
-                   tags$li("Reference cell types with the 5 highest identity scores are also plotted for easy visualization.")
-                 ),
-              
-                 br(),
-              
-              p("Although different calculation methods implemented in CIPR generated comparable results while analyzing heterogeneous immune cell populations from tumors (Ekiz HA and Huffaker TB, JCI Insight, 2019), some methods may perform better than others depending on the experimental context. Importantly, since trancript-level correlations may not be sufficient to fully define the cellular pheonotypes, further bench work may be needed to validate the findings from SCseq experiments."),
-                 
-                 
-                 
-                 
-
-                 h3("How confident is the prediction?"),
-                 p("Since our algorithm compares unknown cluster gene signatures with signatures of reference samples, the confidence in the identity prediction can only be as high as the biological overlap between the experimental sample and the reference datasets. In an ideal scenario where gene expression data are available from all possible cell types under various experimental conditions, we envision that this algorithm can describe the identity of the unknown cell clusters in a highly accurate manner. However, in the absence of such data, CIPR is still useful to characterize unknown cluster identities in single cell transcriptomics experiments by using a multiparametric approach. The predictions of this algorithm need to be experimentally tested to ascertain the biological origins of unknown cell clusters. To help assess the confidence of the predictions, we utilize two different metrics:"),
-                 tags$ul(
-                   tags$li(strong("Deviation from mean (Z-score):"), "For each unknown cluster, this metric is calculated by", strong(em("i) ")), "Averaging the identity scores from the whole reference dataset", strong(em("ii) ")), "Subtracting the identity scores of individual reference from this average", strong(em("iii) ")), "Dividing the difference by the standard deviation of the identity score across the whole reference dataset. This way, the deviation from mean is reported in the units of ", em("standard deviation."), "The higher deviation indicates a more pronounced distinction from the rest of the reference cell types, hence a higher confidence in prediction."),
-                   tags$li(strong("Frequency of positively correlated genes:"), "(For logFC dot product method only) Percentage of the genes that show positive correlation between the unknown cluster and reference cell subsets is reported. This value shows what portion of the differentially expressed genes in an unknown cluster is also differentially expressed in the reference cell in a similar fashion (both upregulated or downregulated). The higher percent positive correlation value indicates a higher similarity between the unknown sample and the reference cell")
-                   
-                 ), # close tags$ul
-                 
-                 p("Although these metrics can be helpful in determining the confidence of prediction, they are not suitable benchmarks for the performance of our algorithm. A 'low-confidence' prediction can be explained by various factors including"),
-                 tags$em(
-                   tags$ul(
-                     tags$li("A lack of comparable cell types in the reference dataset"),
-                     tags$li("Using suboptimal number of metagene dimensions during clustering step of data analysis (which can result in impure clusters consisting of multiple cell types"),
-                     tags$li("Presence of outliers in experimental data and clustering artifacts.")
-                   )),
-                 
-                 p("Alternatively, a 'low-confidence' prediction can suggest an interesting new cell type, and identify contaminating cell populations in the experiment. For instance, our experience with tumor-infiltrating lymphocyte single cell RNA-sequencing in murine B16F10 melanoma model suggests that, contaminating melanoma cells are loosely identified as ImmGen blood stem cells due to their proliferative capacity and stem-like gene expression profiles (Ekiz HA, manuscript in preparation)."),
-                 
-                 h3("Frequently asked questions"),
-                 tags$ul(
-                   tags$li(strong("Why am I getting 'Served Disconnected' error?"), "This can happen if the input and/or the custom reference data are not formatted properly. Please see guidelines above to make sure data are formatted correctly. If the problem persists, please contact us."), 
-                   br(),
-                   tags$li(strong("Is CIPR limited to analyzing mouse data only?"), "Pre-loaded ImmGen data in CIPR is derived from sorted mouse immune cells. However, the pipeline converts the gene names in the input and reference to lower case letters enabling the comparison of orthologous genes in human and mouse. Most of the orthologous gene names differ only in capitalization between human and mice (e.g. Pdcd1 vs PDCD1), and this conversion is sufficient to compare the majority of genes found in the datasets. However, the user should use caution to derive conclusions while comparing datasets across different species. Alternatively, the user can prepare a custom reference dataset to have a more accurate cellular identity approximation. Any number of high throughput data sets readily accessible from", a('Gene Expression Omnibus', href='https://www.ncbi.nlm.nih.gov/geo/'), "and", a('EBI Expression Atlas', href='https://www.ebi.ac.uk/gxa/home'), "can be used to prepare custom reference datasets."),
-                   br(),
-                   tags$li(strong("Which ImmGen datasets are implemented in CIPR?"), "ImmGen microarray data (both V1 and V2) are used in CIPR. Raw microarray data were analyzed using 'affy' package. Gene expression values were normalized using RMA method and data from biological replicates were averaged. Collectively, ImmGen V1+V2 combined dataset contains gene expression data from 296 cells including subsets of lymphocytes, myeloid cells, and stromal cells at baseline, and under various experimental manipulations")
-                 ),
+                 tags$li("The user can use the entire reference dataset for comparisons, or apply filtering to only include genes with high variance. Filtering genes based on high variance can reduce noise, but may also decrease the number of genes that contribute toward identity score calculation. The best parameters need to be empirically determined by the user."),
+        br(),
+        p(strong("Sample reference gene expression data")),
+        imageOutput("sample_reference_file"),
+        
+        
+        h3("About (optional) custom reference annotation data"),
+        tags$ul(
+          tags$li("If a custom reference dataset is used, although not necessary, an annotation file (in csv format) can be uploaded to obtain more informative plots."),
+          tags$li("Annotation file must contain the columns named as", strong("'short_name', 'long_name', 'description', and 'reference_cell_type'")),
+          tags$li("Data under 'short_name' column must", strong("EXACTLY"), "match the column names of the reference gene expression data."),
+          tags$li("Annotation file can have other columns as well, which will be ignored.")
+        ),
+        
+        p(strong("Sample reference annotation data")),
+        imageOutput("sample_annotation_file"),
+        
+        
+        h3("How is cell identity score calculated?"),
+        p("CIPR can either analyze the correlation between unknown clusters and reference cell subsets by using the entire gene set, or can compare the patterns of differential gene expression in unknown clusters and individual reference subsets. When the whole gene set correlation method is used, the used can select either Spearman's or Pearson's correlation. When the logFC comparison method is used, the user can select one of the three calculation approaches: 1) Log fold change (logFC) dot product, 2) Spearman's correlation, 3) Pearson's correlation"),
+        
+        br(),
+        
+        h4(strong("If correlation method is used:")),
+        
+        tags$ul(
+          tags$li("When using correlation approaches, CIPR algorithm calculates pair-wise correlation coefficients between unknown clusters and each of the reference subsets using either Spearman's or Pearson's methods."),
+          tags$li("The correlation coefficients from pairwise comparisons are reported as identity score per reference cell type for each cluster."),
+          tags$li("For each cell cluster in the experiment, correlation coefficients of reference cell types are plotted in dot plots which shows reference cell types on the x-axis, and correlation coefficients on the y-axis."),
+          tags$li("Reference cell types with the 5 highest identity scores for each unknown cluster is summarized in an interactive dot plot"),
+          tags$li("Although, the effects of the outlier genes will be mitigated by the other genes, cell types with only a few strongly distinguishing genes may be misclassified in this method.")
+        ),
+        
+        br(), br(),
+        
+        h4(strong("If logFC comparison method is used:")),
+        
+        p("The algorithm works first by calculating gene expression signatures in the reference file, and then comparing the unknown cluster signatures with these reference signatures. Specifically the following processes are performed:"),
+        h5(strong("Pre-processing of reference dataset")),
+        tags$ul(
+          tags$li("The algorithm uses pre-loaded ImmGen signatures or a user-uploaded reference expression file (see below for the details of reference file format)."),
+          tags$li("The reference expression file should contain normalized gene expression values in log scale in rows and cell types in columns. Reference data can be derived from various high-throughput experiments such as microarray or RNA sequencing"),
+          tags$li("For each gene found in the reference file, algorithm subtracts the average gene expression value of the whole data set (i.e. all columns) from the gene expression value in each cell type (i.e. individual columns) to calculate logFC"),
+          tags$li("Therefore, positive logFC values indicate upregulation and negative values indicate downregulation of a given gene. Therefore, pre-processing of the reference file results in a data frame that features logFC values of each gene in each cell type.")
+        ),
+        h5(strong("Analysis of experimental cluster signatures against reference file")),
+        tags$ul(
+          tags$li("Uploaded cluster signature file should contain information about genes, logFC in expression levels and the cluster information (see below for the correct file format)."),
+          tags$li("Algorithm finds the common genes between experimental data and the reference dataset."),
+          tags$li("User can select one of three methods for comparing logFC values: Spearman's correlation, Pearson's correlation, and logFC dot product"),
+          tags$li("Correlation methods calculate correlation coefficients between logFC values for each unknown cluster-reference cell subset pairs and reports these as identity scores."),
+          tags$li("If logFC dot product method is selected, for each shared gene, logFC values of differentially expressed genes from unknown clusters are multiplied with the logFC values in the reference subsets. This way if a gene is upregulated or downregulated in both the unknown cluster and the reference cell type (i.e. positive correlation), the multiplication will result in a positive number (i.e. multiplication of two positive or two negative numbers). Alternatively, if a gene is differentially regulated in opposite directions in the unknown cluster and reference cell type (i.e. negative correlation), multiplication of logFC values will result in a negative number."),
+          tags$li("Multiplied logFC values per each gene are added up, resulting in an aggregate identity score for each cluster in the experimental data. This way, genes that have similar expression patterns in the experimental cell cluster and the reference cell contribute to a higher identity score, whereas genes with opposite expression patterns will result in a lower identity score"),
+          tags$li(strong("This way, each cluster in the SCseq experiment is analyzed against each known cell type in the reference file and scored for its overall similarity using a dot product approach. A higher identity score indicates the unknown cluster has a similar gene expression profile to a given reference dataset, and suggest shared biological origins.")),
+          tags$li("For each cell cluster in the experiment, aggregate identity score of reference cell types are plotted in dot plots which shows reference cell types on the x-axis, and aggregate identity score on the y-axis."),
+          tags$li("Reference cell types with the 5 highest identity scores are also plotted for easy visualization.")
+        ),
+        
+        br(),
+        
+        p("Although different calculation methods implemented in CIPR generated comparable results while analyzing heterogeneous immune cell populations from tumors (Ekiz HA and Huffaker TB, JCI Insight, 2019), some methods may perform better than others depending on the experimental context. Importantly, since trancript-level correlations may not be sufficient to fully define the cellular pheonotypes, further bench work may be needed to validate the findings from SCseq experiments."),
+        
+        
+        
+        
+        
+        h3("How confident is the prediction?"),
+        p("Since our algorithm compares unknown cluster gene signatures with signatures of reference samples, the confidence in the identity prediction can only be as high as the biological overlap between the experimental sample and the reference datasets. In an ideal scenario where gene expression data are available from all possible cell types under various experimental conditions, we envision that this algorithm can describe the identity of the unknown cell clusters in a highly accurate manner. However, in the absence of such data, CIPR is still useful to characterize unknown cluster identities in single cell transcriptomics experiments by using a multiparametric approach. The predictions of this algorithm need to be experimentally tested to ascertain the biological origins of unknown cell clusters. To help assess the confidence of the predictions, we utilize two different metrics:"),
+        tags$ul(
+          tags$li(strong("Deviation from mean (Z-score):"), "For each unknown cluster, this metric is calculated by", strong(em("i) ")), "Averaging the identity scores from the whole reference dataset", strong(em("ii) ")), "Subtracting the identity scores of individual reference from this average", strong(em("iii) ")), "Dividing the difference by the standard deviation of the identity score across the whole reference dataset. This way, the deviation from mean is reported in the units of ", em("standard deviation."), "The higher deviation indicates a more pronounced distinction from the rest of the reference cell types, hence a higher confidence in prediction."),
+          tags$li(strong("Frequency of positively correlated genes:"), "(For logFC dot product method only) Percentage of the genes that show positive correlation between the unknown cluster and reference cell subsets is reported. This value shows what portion of the differentially expressed genes in an unknown cluster is also differentially expressed in the reference cell in a similar fashion (both upregulated or downregulated). The higher percent positive correlation value indicates a higher similarity between the unknown sample and the reference cell")
+          
+        ), # close tags$ul
+        
+        p("Although these metrics can be helpful in determining the confidence of prediction, they are not suitable benchmarks for the performance of our algorithm. A 'low-confidence' prediction can be explained by various factors including"),
+        tags$em(
+          tags$ul(
+            tags$li("A lack of comparable cell types in the reference dataset"),
+            tags$li("Using suboptimal number of metagene dimensions during clustering step of data analysis (which can result in impure clusters consisting of multiple cell types"),
+            tags$li("Presence of outliers in experimental data and clustering artifacts.")
+          )),
+        
+        p("Alternatively, a 'low-confidence' prediction can suggest an interesting new cell type, and identify contaminating cell populations in the experiment. For instance, our experience with tumor-infiltrating lymphocyte single cell RNA-sequencing in murine B16F10 melanoma model suggests that, contaminating melanoma cells are loosely identified as ImmGen blood stem cells due to their proliferative capacity and stem-like gene expression profiles (Ekiz HA, manuscript in preparation)."),
+        
+        h3("Frequently asked questions"),
+        tags$ul(
+          tags$li(strong("Why am I getting 'Served Disconnected' error?"), "This can happen if the input and/or the custom reference data are not formatted properly. Please see guidelines above to make sure data are formatted correctly. If the problem persists, please contact us."), 
+          br(),
+          tags$li(strong("Is CIPR limited to analyzing mouse data only?"), "Pre-loaded ImmGen data in CIPR is derived from sorted mouse immune cells. However, the pipeline converts the gene names in the input and reference to lower case letters enabling the comparison of orthologous genes in human and mouse. Most of the orthologous gene names differ only in capitalization between human and mice (e.g. Pdcd1 vs PDCD1), and this conversion is sufficient to compare the majority of genes found in the datasets. However, the user should use caution to derive conclusions while comparing datasets across different species. Alternatively, the user can prepare a custom reference dataset to have a more accurate cellular identity approximation. Any number of high throughput data sets readily accessible from", a('Gene Expression Omnibus', href='https://www.ncbi.nlm.nih.gov/geo/'), "and", a('EBI Expression Atlas', href='https://www.ebi.ac.uk/gxa/home'), "can be used to prepare custom reference datasets."),
+          br(),
+          tags$li(strong("Which ImmGen datasets are implemented in CIPR?"), "ImmGen microarray data (both V1 and V2) are used in CIPR. Raw microarray data were analyzed using 'affy' package. Gene expression values were normalized using RMA method and data from biological replicates were averaged. Collectively, ImmGen V1+V2 combined dataset contains gene expression data from 296 cells including subsets of lymphocytes, myeloid cells, and stromal cells at baseline, and under various experimental manipulations")
+        ),
         
         h3("Example R code to generate CIPR input"),
         h4("For correlation methods using whole gene set"),
         tags$pre(
-"
+          "
 # Load Seurat package (v3.0.0 as of this writing)
 library(Seurat)
 
@@ -296,11 +304,11 @@ head(avg_exp)
 write.csv(avg_exp, 'per_cluster_avg_expression.csv', row.names = F)
 
 "),
-br(),
-
-h4("For logFC comparison methods"),
-
-tags$pre("library(Seurat)
+        br(),
+        
+        h4("For logFC comparison methods"),
+        
+        tags$pre("library(Seurat)
 
 # Generate a Seurat object by following Seurat vignettes 
 # (https://satijalab.org/seurat/)
@@ -321,32 +329,32 @@ head(cluster_markers)
 #  Save the cluster_markers object as .csv file
 write.csv(cluster_markers, 'clustermarkers.csv', row.names=F)
 "),
-     
-
-                 h3("CIPR Release Notes"),
+        
+        
+        h3("CIPR Release Notes"),
         tags$ul(
           tags$li("CIPR v5"),
           tags$li("5 different computational methods are implemented allowing the comparisons of i) all genes in the experiment, ii) differentially expressed genes in clusters."),
           tags$li("ImmGen v1 and v2 data are renormalized from raw data files (.CEL), combined and pre-loaded as the reference. These two datasets contain partially overlapping cell types, and were generated using the same microarray platform (Affymetrix MoGene ST1.0 array). For further information please see ImmGen website and associated publications.")
         ),
-                 
-                 
-                 h3("Contact us"),
-                 p("For questions and comments:"),
-                 p("atakan-dot-ekiz-at-hci.utah.edu"),
-                 p("Ryan O'Connell Lab"),
-                 p("Department of Pathology"),
-                 p("University of Utah"),
-                 p("Salt Lake City, Utah")
-                 
-                 
-        )
         
+        
+        h3("Contact us"),
+        p("For questions and comments:"),
+        p("atakan-dot-ekiz-at-hci.utah.edu"),
+        p("Ryan O'Connell Lab"),
+        p("Department of Pathology"),
+        p("University of Utah"),
+        p("Salt Lake City, Utah")
         
         
       )
-    ) 
-  )
+      
+      
+      
+    )
+  ) 
 )
-    
+)
+
 
