@@ -49,7 +49,7 @@ ui <- fluidPage(
                  # horizontal line
                  tags$hr(), 
                  
-                 sliderInput("var_filter", "Keep top Nth % of variable genes",
+                 sliderInput("var_filter", "Keep top Nth % of variable genes in reference",
                              min = 0, max = 100,
                              value = 100),
                  

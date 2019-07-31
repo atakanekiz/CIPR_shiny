@@ -145,7 +145,7 @@ server <- function(input, output){
       # Convert gene symbols to lower case letters to allow mouse-vs-human comparisons
       dat[,gene_column] <- tolower(dat[,gene_column])
       
-      dat <- dat[!duplicated(dat[,gene_column]),]
+      # dat <- dat[!duplicated(dat[,gene_column]),]
       
       dat
       
@@ -229,7 +229,7 @@ server <- function(input, output){
         # Calculated from immgen data by taking the ratio of gene expression per cluster to the overall average
         # and log transforming these values. This object is prepared separately to reduce compute time here
 
-        reference <- readRDS("data/immgen_recalc_ratio.rds")
+        reference <- as.data.frame(readRDS("data/immgen_recalc_ratio.rds"))
         
         # Name of the gene column in reference data
         ref_gene_column <<- grep("gene", colnames(reference), ignore.case = T, value = T)
@@ -276,7 +276,9 @@ server <- function(input, output){
         
         
         # Combine gene names and the log fold change in one data frame
-        reference <- cbind("gene"= tolower(reference[,ref_gene_column]), reference_ratio)
+        reference <- cbind(tolower(reference[,ref_gene_column]), reference_ratio)
+        
+        colnames(reference)[1] <- ref_gene_column
         
         # return this data frame to reactive object
         # reference
@@ -321,7 +323,7 @@ server <- function(input, output){
       
     } else{
       
-      var_vec <- apply(reference, 1, var, na.rm=T)
+      var_vec <- apply(reference[, !colnames(reference) %in% ref_gene_column], 1, var, na.rm=T)
       
       keep_var <- quantile(var_vec, probs = 1-input$var_filter/100, na.rm = T)
       
@@ -331,7 +333,7 @@ server <- function(input, output){
     
     
     # Return reference data frame
-    reference[keep_genes, ]
+    as.data.frame(reference[keep_genes, ])
     
   })
   
@@ -728,7 +730,7 @@ server <- function(input, output){
   
   observe({
     
-    if(input$comp_method == "logFC dot product"){
+    # if(input$comp_method == "logFC dot product"){
       
       
       
@@ -788,61 +790,61 @@ server <- function(input, output){
         
       })  # close withProgress
       
-    } else{
-    
-    withProgress(message = 'Graphing', value = 0, {
-      
-        for (i in clusters()) {
-        
-        # Increment the progress bar, and update the detail text.
-        incProgress(1/length(clusters()), detail = paste("Cluster", i))
-        
-        # Need local so that each item gets its own number. Without it, the value
-        # of i in the renderPlot() will be the same across all instances, because
-        # of when the expression is evaluated.
-        local({
-          
-          df_plot <- analyzed_df() %>%
-            filter(cluster == i)
-          
-          score_mean <- mean(df_plot$identity_score)
-          score_sd <- sd(df_plot$identity_score)
-          
-          
-          
-          my_i <- i
-          plotname <- paste("plot", my_i, sep="")
-          
-          output[[plotname]] <- renderPlot({
-            
-            df_plot_brushed <<- df_plot
-            
-            p <- ggdotplot(df_plot, x = "reference_id", y="identity_score", 
-                           fill = "reference_cell_type", xlab=F, ylab="Correlation coefficient",
-                           font.y = c(14, "bold", "black"), size=1, x.text.angle=90,
-                           title = paste("Cluster:",my_i), font.title = c(15, "bold.italic"),
-                           font.legend = c(15, "plain", "black"))+
-              theme(axis.text.x = element_text(size=10, vjust=0.5, hjust=1))+
-              geom_hline(yintercept=score_mean)+
-              annotate("rect", xmin = 1, xmax = length(df_plot$reference_id),
-                       ymin = score_mean-score_sd, ymax = score_mean+score_sd,
-                       fill = "gray50", alpha = .1)+
-              annotate("rect", xmin = 1, xmax = length(df_plot$reference_id),
-                       ymin = score_mean-2*score_sd, ymax = score_mean+2*score_sd,
-                       fill = "gray50", alpha = .1)
-            
-
-            print(p)
-            
-          }) # close renderPlot
-          
-        }) # close local
-        
-      } # close for loop 
-      
-    })  # close withProgress
-    
-    } 
+    # } else{
+    # 
+    # withProgress(message = 'Graphing', value = 0, {
+    #   
+    #     for (i in clusters()) {
+    #     
+    #     # Increment the progress bar, and update the detail text.
+    #     incProgress(1/length(clusters()), detail = paste("Cluster", i))
+    #     
+    #     # Need local so that each item gets its own number. Without it, the value
+    #     # of i in the renderPlot() will be the same across all instances, because
+    #     # of when the expression is evaluated.
+    #     local({
+    #       
+    #       df_plot <- analyzed_df() %>%
+    #         filter(cluster == i)
+    #       
+    #       score_mean <- mean(df_plot$identity_score)
+    #       score_sd <- sd(df_plot$identity_score)
+    #       
+    #       
+    #       
+    #       my_i <- i
+    #       plotname <- paste("plot", my_i, sep="")
+    #       
+    #       output[[plotname]] <- renderPlot({
+    #         
+    #         df_plot_brushed <<- df_plot
+    #         
+    #         p <- ggdotplot(df_plot, x = "reference_id", y="identity_score", 
+    #                        fill = "reference_cell_type", xlab=F, ylab="Correlation coefficient",
+    #                        font.y = c(14, "bold", "black"), size=1, x.text.angle=90,
+    #                        title = paste("Cluster:",my_i), font.title = c(15, "bold.italic"),
+    #                        font.legend = c(15, "plain", "black"))+
+    #           theme(axis.text.x = element_text(size=10, vjust=0.5, hjust=1))+
+    #           geom_hline(yintercept=score_mean)+
+    #           annotate("rect", xmin = 1, xmax = length(df_plot$reference_id),
+    #                    ymin = score_mean-score_sd, ymax = score_mean+score_sd,
+    #                    fill = "gray50", alpha = .1)+
+    #           annotate("rect", xmin = 1, xmax = length(df_plot$reference_id),
+    #                    ymin = score_mean-2*score_sd, ymax = score_mean+2*score_sd,
+    #                    fill = "gray50", alpha = .1)
+    #         
+    # 
+    #         print(p)
+    #         
+    #       }) # close renderPlot
+    #       
+    #     }) # close local
+    #     
+    #   } # close for loop 
+    #   
+    # })  # close withProgress
+    # 
+    # } 
   }) #close observe
   
   
@@ -852,7 +854,7 @@ server <- function(input, output){
   
   top_df <- reactive({
     
-    if(input$comp_method == "logFC dot product"){
+    # if(input$comp_method == "logFC dot product"){
       
       
       
@@ -884,33 +886,33 @@ server <- function(input, output){
       
       
       
-    } else {
-    
-    
-    top5_df <- analyzed_df() %>%
-      mutate(cluster = factor(cluster, levels = mixedsort(levels(as.factor(cluster))))) %>%
-      arrange(cluster, desc(identity_score)) %>%
-      group_by(cluster) %>%
-      top_n(5, wt = identity_score)
-    
-    
-
-    top5_df$index <- 1:nrow(top5_df)
-    
-    top5_df <- select(top5_df, cluster,
-                      reference_cell_type,
-                      reference_id,
-                      long_name,
-                      description,
-                      identity_score,
-                      index, everything())
-    
-    
-    
-    top5_df_brush <<- top5_df
-    
-    top5_df
-    }
+    # } else {
+    # 
+    # 
+    # top5_df <- analyzed_df() %>%
+    #   mutate(cluster = factor(cluster, levels = mixedsort(levels(as.factor(cluster))))) %>%
+    #   arrange(cluster, desc(identity_score)) %>%
+    #   group_by(cluster) %>%
+    #   top_n(5, wt = identity_score)
+    # 
+    # 
+    # 
+    # top5_df$index <- 1:nrow(top5_df)
+    # 
+    # top5_df <- select(top5_df, cluster,
+    #                   reference_cell_type,
+    #                   reference_id,
+    #                   long_name,
+    #                   description,
+    #                   identity_score,
+    #                   index, everything())
+    # 
+    # 
+    # 
+    # top5_df_brush <<- top5_df
+    # 
+    # top5_df
+    # }
     
   })
   
@@ -918,7 +920,7 @@ server <- function(input, output){
   output$top5 <- renderPlot({
     
     
-    if(input$comp_method == "logFC dot product"){
+    # if(input$comp_method == "logFC dot product"){
       
       
       top_plot <- top_df()
@@ -931,16 +933,16 @@ server <- function(input, output){
       
       
       
-    } else{
-    
-    top_plot <- top_df()
-    
-    ggdotplot(top_plot, x="index", y="identity_score", 
-              fill = "cluster", size=1, x.text.angle=90, 
-              font.legend = c(15, "plain", "black")) +
-      scale_x_discrete(labels=top_plot$reference_id)+
-      theme(axis.text.x = element_text(vjust=0.5, hjust=1))
-    }
+    # } else{
+    # 
+    # top_plot <- top_df()
+    # 
+    # ggdotplot(top_plot, x="index", y="identity_score", 
+    #           fill = "cluster", size=1, x.text.angle=90, 
+    #           font.legend = c(15, "plain", "black")) +
+    #   scale_x_discrete(labels=top_plot$reference_id)+
+    #   theme(axis.text.x = element_text(vjust=0.5, hjust=1))
+    # }
     
   })
   
@@ -973,7 +975,7 @@ server <- function(input, output){
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # reference_log <- readRDS("data/immgen_recalc_ratio.rds")
 # reference <- readRDS("data/immgen.rds")
-# 
+# ref_annot <- readRDS("data/immgen_annot.rds")
 # var_vec_log <- apply(reference_log, 1, var, na.rm=T)
 # var_vec <- apply(reference, 1, var, na.rm=T)
 
