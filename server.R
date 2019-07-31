@@ -145,7 +145,7 @@ server <- function(input, output){
       # Convert gene symbols to lower case letters to allow mouse-vs-human comparisons
       dat[,gene_column] <- tolower(dat[,gene_column])
       
-      dat <- dat[!duplicated(dat[,gene_column]),]
+      # dat <- dat[!duplicated(dat[,gene_column]),]
       
       dat
       
@@ -229,7 +229,7 @@ server <- function(input, output){
         # Calculated from immgen data by taking the ratio of gene expression per cluster to the overall average
         # and log transforming these values. This object is prepared separately to reduce compute time here
 
-        reference <- readRDS("data/immgen_recalc_ratio.rds")
+        reference <- as.data.frame(readRDS("data/immgen_recalc_ratio.rds"))
         
         # Name of the gene column in reference data
         ref_gene_column <<- grep("gene", colnames(reference), ignore.case = T, value = T)
@@ -276,7 +276,9 @@ server <- function(input, output){
         
         
         # Combine gene names and the log fold change in one data frame
-        reference <- cbind("gene"= tolower(reference[,ref_gene_column]), reference_ratio)
+        reference <- cbind(tolower(reference[,ref_gene_column]), reference_ratio)
+        
+        colnames(reference)[1] <- ref_gene_column
         
         # return this data frame to reactive object
         # reference
@@ -321,7 +323,7 @@ server <- function(input, output){
       
     } else{
       
-      var_vec <- apply(reference, 1, var, na.rm=T)
+      var_vec <- apply(reference[!colnames(reference) %in% ref_gene_column], 1, var, na.rm=T)
       
       keep_var <- quantile(var_vec, probs = 1-input$var_filter/100, na.rm = T)
       
@@ -331,7 +333,7 @@ server <- function(input, output){
     
     
     # Return reference data frame
-    reference[keep_genes, ]
+    as.data.frame(reference[keep_genes, ])
     
   })
   
