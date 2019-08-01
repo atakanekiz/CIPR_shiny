@@ -422,7 +422,7 @@ server <- function(input, output){
           
           
           # Merge SCseq cluster log FC value with immgen log FC for shared genes
-          merged <- merge(sel_clst, ref_data(), by.x = gene_column, by.y = "gene")
+          merged <- merge(sel_clst, ref_data(), by.x = gene_column, by.y = ref_gene_column)
           
           
           # Calculate a scoring matrix by multiplying log changes of clusters and immgen cells
@@ -455,7 +455,7 @@ server <- function(input, output){
             # If annotation file is not provided for custom analyses, the table will be populated 
             # with "Upload annotation file" reminder
             df$reference_cell_type <- rep("Upload annotation file", dim(ref_data())[2]-1)
-            df$short_name <- colnames(ref_data())[!colnames(ref_data()) %in% "gene"]
+            df$short_name <- colnames(ref_data())[!colnames(ref_data()) %in% ref_gene_column]
             df$long_name <- rep("Upload annotation file", dim(ref_data())[2]-1)
             df$description <- rep("Upload annotation file", dim(ref_data())[2]-1)
             
