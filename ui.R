@@ -341,7 +341,7 @@ write.csv(cluster_markers, 'clustermarkers.csv', row.names=F)
         
         h3("Contact us"),
         p("For questions and comments:"),
-        p("atakan-dot-ekiz-at-hci.utah.edu"),
+        p("atakan-dot-ekiz-at-path.utah.edu"),
         p("Ryan O'Connell Lab"),
         p("Department of Pathology"),
         p("University of Utah"),
