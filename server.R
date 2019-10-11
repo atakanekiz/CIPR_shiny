@@ -125,7 +125,7 @@ server <- function(input, output){
         dat <- read.csv(inFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
         
         validate(
-          need(anyNA(colnames(dat)) != F, "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
+          need(!anyNA(colnames(dat)), "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
         )
         
         # Make sure the column names are proper for correct subsetting
@@ -190,7 +190,7 @@ server <- function(input, output){
         dat <- read.csv(inFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
         
         validate(
-          need(anyNA(colnames(dat)) != F, "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
+          need(!anyNA(colnames(dat)), "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
         )
         
         # Make sure the column names are proper for correct subsetting
