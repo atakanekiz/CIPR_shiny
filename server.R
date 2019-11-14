@@ -99,7 +99,7 @@ server <- function(input, output){
         req(input$run)
         
         dat <- read.csv("data/Trimmed_cluster_signatures.csv",
-                        check.names = F,
+                        check.names = T,
                         strip.white = T, 
                         stringsAsFactors = F)
         
@@ -122,7 +122,7 @@ server <- function(input, output){
         
         
         
-        dat <- read.csv(inFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
+        dat <- read.csv(inFile$datapath, check.names=TRUE, strip.white = TRUE, stringsAsFactors = F)
         
         validate(
           need(!anyNA(colnames(dat)), "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
@@ -187,11 +187,13 @@ server <- function(input, output){
         
         
         
-        dat <- read.csv(inFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
+        dat <- read.csv(inFile$datapath, check.names=TRUE, strip.white = TRUE, stringsAsFactors = F)
         
         validate(
           need(!anyNA(colnames(dat)), "Unnamed column is found in the uploaded data. Please fix this problem and try again. When manually preparing dataframes, sometimes, empty-looking columns may have 'invisible' data associated with them. Try deleting these columns using a spreadsheet software or re-make a clean csv file.")
         )
+        
+        
         
         # Make sure the column names are proper for correct subsetting
         validate(
@@ -260,7 +262,7 @@ server <- function(input, output){
             'csv'
           ), "Wrong File Format. File needs to be a .csv file."))
         
-        reference <- read.csv(in_refFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
+        reference <- read.csv(in_refFile$datapath, check.names=TRUE, strip.white = TRUE, stringsAsFactors = F)
         
         ref_gene_column <<- grep("gene", colnames(reference), ignore.case = T, value = T)
         
@@ -299,7 +301,7 @@ server <- function(input, output){
         
         in_refFile <- input$ref_file
         
-        reference <- read.csv(in_refFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
+        reference <- read.csv(in_refFile$datapath, check.names=TRUE, strip.white = TRUE, stringsAsFactors = F)
         
         ref_gene_column <<- grep("gene", colnames(reference), ignore.case = T, value = T)
         
@@ -357,7 +359,7 @@ server <- function(input, output){
       
       annotFile <- input$annot_file
       
-      ref_annotation <- read.csv(annotFile$datapath, check.names=FALSE, strip.white = TRUE, stringsAsFactors = F)
+      ref_annotation <- read.csv(annotFile$datapath, check.names=TRUE, strip.white = TRUE, stringsAsFactors = F)
       ref_annotation
       
     }
