@@ -43,7 +43,8 @@ ui <- fluidPage(
                  
                  radioButtons("comp_method", 
                               label = "Select method for comparisons", 
-                              choices = c("Spearman (all genes)", "Pearson (all genes)", "logFC dot product", "logFC Spearman", "logFC Pearson"), 
+                              choices = c("logFC dot product", "logFC Spearman", "logFC Pearson",
+                                          "Spearman (all genes)", "Pearson (all genes)"), 
                               selected = "Spearman (all genes)"), 
                  
                  # horizontal line
