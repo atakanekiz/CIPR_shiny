@@ -45,7 +45,7 @@ ui <- fluidPage(
                               label = "Select method for comparisons", 
                               choices = c("logFC dot product", "logFC Spearman", "logFC Pearson",
                                           "Spearman (all genes)", "Pearson (all genes)"), 
-                              selected = "Spearman (all genes)"), 
+                              selected = "logFC dot product"), 
                  
                  # horizontal line
                  tags$hr(), 
